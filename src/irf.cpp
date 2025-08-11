@@ -1,5 +1,9 @@
 #include<RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::plugins(openmp)]]
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 void get_PHI(arma::cube& PHI, arma::cube& Fmat, const int nhor){
   const int plag = Fmat.n_slices;
@@ -76,7 +80,29 @@ Rcpp::List compute_irf(arma::cube A_large, arma::cube S_large, arma::cube Ginv_l
   //arma::vec prog_rep_points = round(arma::linspace(0, thindraws, 50));
   //bool display_progress = true;
   //Progress prog(50, verbose);
+  // Set number of threads to max-2
+  #ifdef _OPENMP
+  int max_threads = omp_get_max_threads();
+  int use_threads = std::max(1, max_threads - 2);  // ensure at least 1 thread
+  omp_set_num_threads(use_threads); 
+  if (verbose) {
+      Rcpp::Rcout << "Using " << use_threads << " threads for parallel computation\n";
+  }
+  #endif
+  #pragma omp parallel for shared(irf_output, rot_output, counter_output, A_large, S_large, Ginv_large) \
+  private(Amat, Smat, Ginv, Fmat, PHI, P0G, Q_bar, invGSigma_u, irfa) \
+  schedule(dynamic)
   for(int irep = 0; irep < thindraws; irep++){
+  // Create thread-local variables
+  arma::cube irfa(bigK, bigK, nhor);
+  arma::cube PHI(bigK, bigK, nhor);
+  arma::mat Amat(bigK, k);
+  arma::mat Smat(bigK, bigK);
+  arma::mat Ginv(bigK, bigK);
+  arma::cube Fmat(bigK, bigK, plag, arma::fill::zeros);
+  arma::mat P0G(bigK, bigK, arma::fill::zeros);
+  arma::mat Q_bar(bigK, bigK, arma::fill::zeros);
+  arma::mat invGSigma_u(bigK, bigK, arma::fill::zeros);
   // current draw
   Amat = A_large.slice(irep);
   Smat = S_large.slice(irep);
@@ -229,7 +255,7 @@ Rcpp::List compute_irf(arma::cube A_large, arma::cube S_large, arma::cube Ginv_l
    if(save_rot){
      rot_output(irep) = Q_bar;
    }
-   
+
    //if(verbose){
       // Increment progress bar
    // if (any(prog_rep_points == irep)){
@@ -237,8 +263,12 @@ Rcpp::List compute_irf(arma::cube A_large, arma::cube S_large, arma::cube Ginv_l
       //}
    //}
    // check user interruption
-   if(irep % 10 == 0)
-   Rcpp::checkUserInterrupt();
+   #pragma omp critical
+   {
+    if(irep % 50 == 0) {
+    Rcpp::checkUserInterrupt();
+    }
+    }
   } // end for-loop of impulse response computation
    //----------------------------------------------------------------------------
    
