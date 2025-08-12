@@ -59,8 +59,7 @@ Rcpp::List compute_irf(arma::cube A_large,
                       const int thindraws, 
                       const SEXP shocklist_in, 
                       const bool save_rot, 
-                      const bool verbose = true,
-                      const int num_threads = 1) {
+                      const bool verbose = true) {
     
     // Input processing
     Rcpp::List shocklist(Rcpp::clone(shocklist_in));
