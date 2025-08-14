@@ -86,7 +86,7 @@ Rcpp::List compute_irf(arma::cube A_large,
     
     // OpenMP Setup
     #ifdef _OPENMP
-    int max_threads = omp_get_max_threads();
+    int max_threads = omp_get_num_procs();
     int use_threads = std::max(1, max_threads - 2);
     omp_set_num_threads(use_threads);
     if (verbose) {
