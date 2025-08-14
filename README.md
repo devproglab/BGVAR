@@ -14,7 +14,7 @@ BGVAR is available on [CRAN](https://CRAN.R-project.org/package=BGVAR). The late
 
 ``` r
 install.packages("BGVAR")
-devtools::install_github("mboeck11/BGVAR")
+devtools::install_github("devproglab/BGVAR")
 ```
 
 Note that Mac OS needs gfortran binary packages to be installed. See also: https://gcc.gnu.org/wiki/GFortranBinaries.
