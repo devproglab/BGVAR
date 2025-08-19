@@ -92,7 +92,7 @@
 #' @importFrom abind adrop abind
 #' @importFrom stochvol sv_normal sv_beta sv_gamma
 #' @importFrom RcppParallel RcppParallelLibs setThreadOptions defaultNumThreads
-#' @importFrom filematrix fm.create fm.open filematrix
+#' @importFrom filematrix fm.create fm.open filematrix closeAndDeleteFiles
 irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,verbose=TRUE){
   start.irf <- Sys.time()
   # get identification
