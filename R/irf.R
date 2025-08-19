@@ -1,5 +1,5 @@
 #' @export
-"irf" <- function(x, n.ahead=24, shockinfo=NULL, quantiles=NULL, expert=NULL, verbose=TRUE{
+"irf" <- function(x, n.ahead=24, shockinfo=NULL, quantiles=NULL, expert=NULL, verbose=TRUE){
   UseMethod("irf", x)
 }
 
