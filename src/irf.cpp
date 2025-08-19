@@ -161,6 +161,8 @@ Rcpp::List compute_irf(arma::cube A_large, arma::cube S_large, arma::cube Ginv_l
       std::normal_distribution<double> rnorm(0.0, 1.0);
       std::uniform_real_distribution<double> runif(0.0, 1.0);
       
+      Rcpp::Rcout << "Allocation done, calculating";
+      
       #pragma omp for schedule(dynamic)
       for(int irep = 0; irep < thindraws; irep++) {
         // reset memory
