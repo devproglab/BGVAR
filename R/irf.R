@@ -155,6 +155,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   use_R       <- expert.list$use_R
   applyfun    <- expert.list$applyfun
   cores       <- expert.list$cores
+  calc_median <- expert.list$calc_median
   #---------------------------- identification schemes --------------------------------------------#
   if(ident=="chol")
   {
