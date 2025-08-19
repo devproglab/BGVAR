@@ -508,7 +508,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
       counter[irep] <- temp$counter[irep,1]
     }
     if(verbose) cat("\nCpp calculations done")
-    if (length(which(counter==MaxTries))) {
+    if (length(which(counter==MaxTries)) > 0) {
       irf_bigmat = deepcopy(irf_bigmat, cols = which(!counter==MaxTries))
       rot_bigmat = deepcopy(rot_bigmat, cols = which(!counter==MaxTries))
       if(verbose) cat("\nRows hitting MaxIter removed")

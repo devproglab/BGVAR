@@ -327,10 +327,10 @@ Rcpp::List compute_irf(arma::cube A_large, arma::cube S_large, arma::cube Ginv_l
    //   rot_output(irep) = Q_bar;
    // }
   // Write results to BigMatrix (thread-safe)
-  // write_irf_to_bigmat(xpIrfMat, irfa, irep, bigK, nhor);
-  // if(save_rot) {
-  //   write_rot_to_bigmat(xpRotMat, Q_bar, irep, bigK);
-  // }
+  write_irf_to_bigmat(xpIrfMat, irfa, irep, bigK, nhor);
+  if(save_rot) {
+    write_rot_to_bigmat(xpRotMat, Q_bar, irep, bigK);
+  }
   //if(verbose){
       // Increment progress bar
    // if (any(prog_rep_points == irep)){
