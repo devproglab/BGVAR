@@ -466,7 +466,7 @@ bgvar<-function(Data,W,plag=1,draws=5000,burnin=5000,prior="NG",SV=TRUE,hold.out
         on.exit(parallel::stopCluster(cl_cores))
         function(X, FUN, ...) parallel::parLapply(cl = cl_cores, X, FUN, ...)
       } else {
-        function(X, FUN, ...) parallel::mclapply(X, FUN, ..., mc.cores =
+        function(X, FUN, ...) mcprogress::pmclapply(X, FUN, ..., mc.cores =
                                                    cores)
       }
     }
