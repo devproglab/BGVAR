@@ -1285,7 +1285,7 @@
 #' @importFrom stats median
 #' @importFrom utils memory.limit
 #' @noRd
-.gvar.stacking.wrapper<-function(xglobal,plag,globalpost,draws,thin,trend,eigen,trim,verbose){
+.gvar.stacking.wrapper<-function(xglobal,plag,globalpost,draws,thin,trend,eigen,trim,verbose,threads){
   results <- tryCatch(
     {
       bigT      <- nrow(xglobal)
@@ -1304,7 +1304,8 @@
                            thin       = as.integer(thin), 
                            trend      = trend, 
                            eigen      = TRUE, 
-                           verbose    = verbose)
+                           verbose    = verbose,
+                           threads    = threads)
       A_large    <- out$A_large
       for(pp in 1:plag){
         F_large[,,pp,] <- out$F_large[,((bigK*(pp-1))+1):(bigK*pp),,drop=FALSE]
