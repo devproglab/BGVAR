@@ -162,6 +162,7 @@
 #' @importFrom Rcpp evalCpp
 #' @importFrom stats is.ts median time ts
 #' @importFrom parallel parLapply mclapply
+#' @importFrom mcprogress pmclapply
 #' @importFrom xts is.xts
 #' @importFrom zoo coredata
 bgvar<-function(Data,W,plag=1,draws=5000,burnin=5000,prior="NG",SV=TRUE,hold.out=0,thin=1,hyperpara=NULL,
