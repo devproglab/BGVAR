@@ -2,6 +2,7 @@
 #include <RcppArmadillo.h>
 #include <stdlib.h>
 #include "helper.h"
+#include <omp.h>
 
 using namespace Rcpp;
 using namespace arma;
@@ -10,7 +11,7 @@ using namespace arma;
 //' @noRd
 //[[Rcpp::export]]
 List gvar_stacking(const arma::mat xglobal, const int plag, const Rcpp::List globalpost, const int draws, const int thin,
-                   const bool trend, const bool eigen, const bool verbose) {
+                   const bool trend, const bool eigen, const bool verbose, const int threads) {
   //----------------------------------------------------------------------------------------------------------------------
   // GET INPUTS
   //----------------------------------------------------------------------------------------------------------------------
@@ -19,6 +20,9 @@ List gvar_stacking(const arma::mat xglobal, const int plag, const Rcpp::List glo
   
   const int thindraws = draws/thin;
   vec F_eigen(thindraws, fill::zeros);
+  
+  int use_threads = threads;
+  omp_set_num_threads(use_threads);
   
   int number_determinants = 1; // cons
   if(trend){number_determinants += 1;}
@@ -33,6 +37,7 @@ List gvar_stacking(const arma::mat xglobal, const int plag, const Rcpp::List glo
   //vec prog_rep_points = round(linspace(0, thindraws, 50));
   //bool display_progress = true;
   //Progress prog(50, verbose);
+  #pragma omp parallel for schedule(dynamic)
   for(int irep = 0; irep < thindraws; irep++){
     // patient 0
     List VAR = globalpost[0];

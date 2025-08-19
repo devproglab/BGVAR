@@ -498,7 +498,7 @@ bgvar<-function(Data,W,plag=1,draws=5000,burnin=5000,prior="NG",SV=TRUE,hold.out
   if(verbose) cat("Stacking of global model starts... \n")
   # insert stacking function here
   # Rcpp::sourceCpp("./src/gvar_stacking.cpp")
-  stacked.results <- .gvar.stacking.wrapper(xglobal=xglobal,plag=max(lags),globalpost=globalpost,draws=draws,thin=thin,trend=trend,eigen=eigen,trim=trim,verbose=verbose)
+  stacked.results <- .gvar.stacking.wrapper(xglobal=xglobal,plag=max(lags),globalpost=globalpost,draws=draws,thin=thin,trend=trend,eigen=eigen,trim=trim,verbose=verbose,threads=cores)
   if(!is.null(trim)) {args$thindraws <- length(stacked.results$F.eigen)}
   if(verbose) cat("\nStacking finished.\n")
   if(verbose) cat(paste0("Computation of BGVAR yields ",args$thindraws," (",round(args$thindraws/(draws/thin),2)*100,"%) draws (",

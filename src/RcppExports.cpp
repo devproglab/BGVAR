@@ -74,8 +74,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // gvar_stacking
-List gvar_stacking(const arma::mat xglobal, const int plag, const Rcpp::List globalpost, const int draws, const int thin, const bool trend, const bool eigen, const bool verbose);
-RcppExport SEXP _BGVAR_gvar_stacking(SEXP xglobalSEXP, SEXP plagSEXP, SEXP globalpostSEXP, SEXP drawsSEXP, SEXP thinSEXP, SEXP trendSEXP, SEXP eigenSEXP, SEXP verboseSEXP) {
+List gvar_stacking(const arma::mat xglobal, const int plag, const Rcpp::List globalpost, const int draws, const int thin, const bool trend, const bool eigen, const bool verbose, const int threads);
+RcppExport SEXP _BGVAR_gvar_stacking(SEXP xglobalSEXP, SEXP plagSEXP, SEXP globalpostSEXP, SEXP drawsSEXP, SEXP thinSEXP, SEXP trendSEXP, SEXP eigenSEXP, SEXP verboseSEXP, SEXP threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -87,7 +87,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const bool >::type trend(trendSEXP);
     Rcpp::traits::input_parameter< const bool >::type eigen(eigenSEXP);
     Rcpp::traits::input_parameter< const bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(gvar_stacking(xglobal, plag, globalpost, draws, thin, trend, eigen, verbose));
+    Rcpp::traits::input_parameter< const int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gvar_stacking(xglobal, plag, globalpost, draws, thin, trend, eigen, verbose, threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -163,7 +164,7 @@ RcppExport SEXP _BGVAR_RcppExport_registerCCallable() {
 static const R_CallMethodDef CallEntries[] = {
     {"_BGVAR_BVAR_linear", (DL_FUNC) &_BGVAR_BVAR_linear, 13},
     {"_BGVAR_do_rgig1", (DL_FUNC) &_BGVAR_do_rgig1, 3},
-    {"_BGVAR_gvar_stacking", (DL_FUNC) &_BGVAR_gvar_stacking, 8},
+    {"_BGVAR_gvar_stacking", (DL_FUNC) &_BGVAR_gvar_stacking, 9},
     {"_BGVAR_globalLik", (DL_FUNC) &_BGVAR_globalLik, 6},
     {"_BGVAR_dmvnrm_arma_fast", (DL_FUNC) &_BGVAR_dmvnrm_arma_fast, 4},
     {"_BGVAR_compute_irf", (DL_FUNC) &_BGVAR_compute_irf, 12},
