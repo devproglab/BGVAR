@@ -1,8 +1,11 @@
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::plugins(openmp)]]
 #include <RcppArmadillo.h>
 #include <stdlib.h>
 #include "helper.h"
 #include <omp.h>
+#include <thread>
+
 
 using namespace Rcpp;
 using namespace arma;
@@ -21,9 +24,6 @@ List gvar_stacking(const arma::mat xglobal, const int plag, const Rcpp::List glo
   const int thindraws = draws/thin;
   vec F_eigen(thindraws, fill::zeros);
   
-  int use_threads = threads;
-  omp_set_num_threads(use_threads);
-  
   int number_determinants = 1; // cons
   if(trend){number_determinants += 1;}
   
@@ -37,7 +37,6 @@ List gvar_stacking(const arma::mat xglobal, const int plag, const Rcpp::List glo
   //vec prog_rep_points = round(linspace(0, thindraws, 50));
   //bool display_progress = true;
   //Progress prog(50, verbose);
-  #pragma omp parallel for schedule(dynamic)
   for(int irep = 0; irep < thindraws; irep++){
     // patient 0
     List VAR = globalpost[0];
@@ -107,7 +106,7 @@ List gvar_stacking(const arma::mat xglobal, const int plag, const Rcpp::List glo
         arma::cube Phi_p = Phi[pp]; 
         arma::mat Lambdairep = Lambda_p.slice(irep);
         arma::mat Phiirep = Phi_p.slice(irep);
-       
+        
         mat H1 = join_rows(Phiirep.t(),Lambdairep.t())*W;
         mat H0 = H[pp];
         mat H2 = join_cols(H0,H1);
@@ -132,7 +131,7 @@ List gvar_stacking(const arma::mat xglobal, const int plag, const Rcpp::List glo
     A_large.slice(irep) = A;
     S_large.slice(irep) = S;
     Ginv_large.slice(irep) = Ginv;
-  
+    
     // compute eigenvalues
     if(eigen){
       arma::mat MM(bigK*plag, bigK*plag, fill::zeros); MM.submat(0,0,bigK-1,bigK*plag-1) = F;
@@ -142,10 +141,10 @@ List gvar_stacking(const arma::mat xglobal, const int plag, const Rcpp::List glo
     }
     
     //if(verbose){
-      // Increment progress bar
-      //if (any(prog_rep_points == irep)){
-      //  prog.increment();
-      //}
+    // Increment progress bar
+    //if (any(prog_rep_points == irep)){
+    //  prog.increment();
+    //}
     //}
     // check user interruption
     if(irep % 200 == 0)
