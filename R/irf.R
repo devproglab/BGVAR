@@ -1,5 +1,5 @@
 #' @export
-"irf" <- function(x, n.ahead=24, shockinfo=NULL, quantiles=NULL, expert=NULL, verbose=TRUE, calc_median = TRUE){
+"irf" <- function(x, n.ahead=24, shockinfo=NULL, quantiles=NULL, expert=NULL, verbose=TRUE{
   UseMethod("irf", x)
 }
 
@@ -93,7 +93,7 @@
 #' @importFrom stochvol sv_normal sv_beta sv_gamma
 #' @importFrom RcppParallel RcppParallelLibs setThreadOptions defaultNumThreads
 #' @importFrom filematrix fm.create fm.open closeAndDeleteFiles
-irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,verbose=TRUE,calc_median=TRUE){
+irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,verbose=TRUE){
   start.irf <- Sys.time()
   # get identification
   ident <- attr(shockinfo, "ident")
@@ -142,7 +142,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   N           <- length(cN)
   Q           <- length(quantiles)
   # expert settings
-  expert.list <- list(MaxTries=100, save.store=FALSE, use_R=FALSE, applyfun=NULL, cores=NULL)
+  expert.list <- list(MaxTries=100, save.store=FALSE, use_R=FALSE, applyfun=NULL, cores=NULL, calc_median=TRUE)
   if(!is.null(expert)){
     if(!(is.null(expert$cores) || is.numeric(expert$cores) || expert$cores%in%c("all","half"))){
       stop("Please provide the expert argument 'cores' in appropriate form. Please recheck.")
