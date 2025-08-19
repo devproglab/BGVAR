@@ -123,24 +123,21 @@ BEGIN_RCPP
 END_RCPP
 }
 // compute_irf
-Rcpp::List compute_irf(arma::cube A_large, arma::cube S_large, arma::cube Ginv_large, const int type, const int nhor, const int thindraws, const SEXP shocklist_in, SEXP irf_bigmat, SEXP rot_bigmat, const bool verbose, const bool save_rot, const int threads);
-RcppExport SEXP _BGVAR_compute_irf(SEXP A_largeSEXP, SEXP S_largeSEXP, SEXP Ginv_largeSEXP, SEXP typeSEXP, SEXP nhorSEXP, SEXP thindrawsSEXP, SEXP shocklist_inSEXP, SEXP irf_bigmatSEXP, SEXP rot_bigmatSEXP, SEXP verboseSEXP, SEXP save_rotSEXP, SEXP threadsSEXP) {
+Rcpp::List compute_irf(arma::mat A_draw, arma::mat S_draw, arma::mat Ginv_draw, const int type, const int nhor, const int draw_idx, const SEXP shocklist_in, const bool save_rot, const int seed);
+RcppExport SEXP _BGVAR_compute_irf(SEXP A_drawSEXP, SEXP S_drawSEXP, SEXP Ginv_drawSEXP, SEXP typeSEXP, SEXP nhorSEXP, SEXP draw_idxSEXP, SEXP shocklist_inSEXP, SEXP save_rotSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::cube >::type A_large(A_largeSEXP);
-    Rcpp::traits::input_parameter< arma::cube >::type S_large(S_largeSEXP);
-    Rcpp::traits::input_parameter< arma::cube >::type Ginv_large(Ginv_largeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type A_draw(A_drawSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type S_draw(S_drawSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Ginv_draw(Ginv_drawSEXP);
     Rcpp::traits::input_parameter< const int >::type type(typeSEXP);
     Rcpp::traits::input_parameter< const int >::type nhor(nhorSEXP);
-    Rcpp::traits::input_parameter< const int >::type thindraws(thindrawsSEXP);
+    Rcpp::traits::input_parameter< const int >::type draw_idx(draw_idxSEXP);
     Rcpp::traits::input_parameter< const SEXP >::type shocklist_in(shocklist_inSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type irf_bigmat(irf_bigmatSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type rot_bigmat(rot_bigmatSEXP);
-    Rcpp::traits::input_parameter< const bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< const bool >::type save_rot(save_rotSEXP);
-    Rcpp::traits::input_parameter< const int >::type threads(threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_irf(A_large, S_large, Ginv_large, type, nhor, thindraws, shocklist_in, irf_bigmat, rot_bigmat, verbose, save_rot, threads));
+    Rcpp::traits::input_parameter< const int >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_irf(A_draw, S_draw, Ginv_draw, type, nhor, draw_idx, shocklist_in, save_rot, seed));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -167,7 +164,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BGVAR_gvar_stacking", (DL_FUNC) &_BGVAR_gvar_stacking, 9},
     {"_BGVAR_globalLik", (DL_FUNC) &_BGVAR_globalLik, 6},
     {"_BGVAR_dmvnrm_arma_fast", (DL_FUNC) &_BGVAR_dmvnrm_arma_fast, 4},
-    {"_BGVAR_compute_irf", (DL_FUNC) &_BGVAR_compute_irf, 12},
+    {"_BGVAR_compute_irf", (DL_FUNC) &_BGVAR_compute_irf, 9},
     {"_BGVAR_RcppExport_registerCCallable", (DL_FUNC) &_BGVAR_RcppExport_registerCCallable, 0},
     {NULL, NULL, 0}
 };

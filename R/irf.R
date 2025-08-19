@@ -431,7 +431,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
         on.exit(parallel::stopCluster(cl_cores))
         function(X, FUN, ...) parallel::parLapply(cl = cl_cores, X, FUN, ...)
       } else {
-        function(X, FUN, ...) parallel::mclapply(X, FUN, ..., mc.cores =
+        function(X, FUN, ...) mcprogress::pmclapply(X, FUN, ..., mc.cores =
                                                    cores)
       }
     }
@@ -501,12 +501,23 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
     type <- ifelse(ident=="chol",1,ifelse(ident=="girf",2,3))
     counter <- numeric(length=thindraws)
     # Rcpp::sourceCpp("./src/irf.cpp")
-    # Rcpp::sourceCpp("/users/mboeck/documents/packages/bgvar/src/irf.cpp")
-    temp = compute_irf(A_large=A_large,S_large=S_large,Ginv_large=Ginv_large,type=type,nhor=n.ahead+1,thindraws=thindraws,shocklist_in=shocklist,irf_bigmat=irf_bigmat@address,rot_bigmat=rot_bigmat@address,save_rot=save_rot,verbose=verbose,threads=cores)
+    # irep <- 1
+    # imp.obj <- compute_irf(A_large[,,irep], S_large[,,irep], Ginv_large[,,irep], 
+    #                        type, n.ahead+1, irep-1, shocklist, irf_bigmat@address, rot_bigmat@address, save_rot)
+    applyfun(1:thindraws,function(irep){
+      mat <- bigmemory::attach.big.matrix('IRF_data.desc')
+      imp.obj <- compute_irf(A_large[,,irep], S_large[,,irep], Ginv_large[,,irep],
+                             type, n.ahead+1, irep-1, shocklist, save_rot)
+      mat[,irep] <- as.vector(imp.obj$irf_result)
+      counter[irep] <- imp.obj$counter
+      imp.obj$irf_result <- NULL
+      imp.obj$rot_result <- NULL
+      rm(imp.obj)
+    })
+    # if(.Platform$OS.type == "windows") {
+    #   parallel::stopCluster(cl_cores)
+    # }
     gc()
-    for(irep in 1:thindraws){
-      counter[irep] <- temp$counter[irep,1]
-    }
     if(verbose) cat("\nCpp calculations done")
     if (length(which(counter==MaxTries)) > 0) {
       irf_bigmat = deepcopy(irf_bigmat, cols = which(!counter==MaxTries))
