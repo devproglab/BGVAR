@@ -1,0 +1,47 @@
+# RStudio files
+.Rproj.user/
+.Rproj.user
+BGVAR.Rproj
+
+# History files
+.Rhistory
+.Rapp.history
+man/.Rhistory
+
+.RData
+.RDataTmp.Ruserdata
+
+.Renviron
+
+*.utf8.md
+*.knit.md
+
+*_cache/
+/cache/
+
+/*.tar.gz
+
+.DS_Store
+
+cran-comments.md
+
+CRAN-SUBMISSION
+
+# C++
+## Compiled Object files
+*.o
+## Compiled Dynamic libraries
+*.so
+
+# produced vignettes
+vignettes/*.html
+vignettes/*.pdf
+
+# Temporary files created by R markdown
+*.utf8.md
+*.knit.md
+
+TODO
+doc
+Meta
+inst/doc

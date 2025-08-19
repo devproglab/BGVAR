@@ -1,0 +1,135 @@
+Change in Version 2.5.9
+- updated documentation regarding 'prmean'
+
+Change in Version 2.5.8
+- update mail adress of maintainer
+- fix for hyperparameters of Minnesota prior
+
+Change in Version 2.5.6
+- some minor bug fixes (numerical issues when estimating single-VARs)
+
+Change in Version 2.5.5
+- fix error on CRAN 
+
+Change in Version 2.5.3
+- small change in estimation procedure: countries can now have asymmetric effects, i.e., they are important for other countries
+- but do have own spillovers (no weakly exogenous variables for particular countries)
+- add JSS paper to vignette
+- update maintainer information (mail address)
+- change 'itemize' to 'describe' in markdown help files.
+- irf command returns plotted data in list format.
+- fixed a bug in .getweights().
+
+Change in Version 2.5.2
+- add JSS publication
+
+Change in Version 2.5.1
+- changes plot styles
+
+Change in Version 2.5.0
+- bugfix in pesaranData (rowSums did not sum up to one)
+- final version for JSS publication
+
+Change in Version 2.4.6
+- improved memory usage and garbage collection in irf function
+
+Change in Version 2.4.4/5
+- Implementation of the corrigendum of Carriero, Chan, Clark, and Marcellino (2021, Journal of Econometrics)
+- added the horseshoe prior (Makalic and Schmidt, 2015, IEEE Signal Processing Letters)
+- better memory usage
+- new features:
+  - plag can now be differently specified for endogenous and weakly exogenous variables
+- bugfix in Ex argument in `bgvar`
+- bugfix in summary command
+- bugfix with Wex.restr
+- bugfix in monthlyData
+- bugfix in GFEVD
+- bugfix in summary
+
+Change in Version 2.4.2/3
+- bugfix in fevd; added additional check
+
+Change in Version 2.4.1
+- bugfix in Rcpp code (occured when using SSVS prior and save.shrink.store=TRUE)
+- bugfixes in vignette
+- update of monthlyData dataset
+
+Change in Version 2.4.0
+- bugfix in plotting fitted values
+- per default no save of containers of shrinkage parameter - decreases significantly memory usage
+- restructure of example data sets
+- change print method of rmse / lps
+
+Change in Version 2.3.1
+- small adaptions in help files.
+- changed some functions to S3 method
+- changed default options of bgvar()
+- renaming of functions
+- bugfix(es) with external variables
+
+Change in Version 2.3.0
+- added reader function for Excel
+- updated vignette with own section for reading data from excel
+
+Change in Version 2.2.2
+- small fix in BVAR_linear.cpp
+
+Change in Version 2.2.1
+- small update to clear errors in CRAN Checks
+- added output of 'bgvar' function. Now directly shows the number of stable draws when using the function.
+- added a missing reference in vignette
+
+Change in Version 2.2.0
+- complete redesign of 'irf' function
+  - computation of irf now in C++
+  - makes use of parallel computing via RcppParallel
+  - additional argument with 'shockinfo'
+- two new functions: get_shockinfo() and add_shockinfo() as helper function for designing shockinfo argument in irf computation
+- introduction of 'expert' settings to reduce number of arguments in main functions (bgvar and irf)
+- conditional predictions now possible within predict function
+- synchronization of parameter names with accompanied paper
+- minor bug fixes
+
+Change in Version 2.1.4
+- updated backends of new 'stochvol' package
+- added dataset 'eerDatasmall' to check functionality of package faster
+- minor bug fixes
+
+Change in Version 2.1.3
+- fixed typo in vignette
+
+Changes in Version 2.1.2
+- adapted various roxygen articles
+- summary output needs now less space
+- citations are adapted with Working paper
+
+Changes in Version 2.1.1
+- changed argument names of 'bgvar' to be more similar to existing Bayesian packages
+  - 'saves' is now 'draws'
+  - 'burns' is now 'burnin'
+- changed argument name of 'predict' to be more similar to existing Bayesian packages
+  - 'fhorz' is now 'n.ahead'
+- added new class 'bgvar.summary' with print method
+- loglikelihood is saved in class 'logLik'
+- print methods have now no own helpfile (not necessary)
+- deleted some printing to the console and use now consistently cat()
+- rename of some functions
+- changes related to multithreading
+  - not dependent on foreach and doparallal any more
+  - parLapply for Windows platforms
+  - mclapply for non-Windows platforms
+  - user can also specify own apply function
+- adapted class 'logLik.bgvar' to class 'logLik'
+- added 'print' method for classes 'bgvar.hd', 'bgvar.irf', 'bgvar.fevd'
+- changed argument of 'nhor' to 'n.ahead' of function irf() and gfevd()
+
+Changes in Version 2.0.1
+- bug fixes in Rcpp code (wrong overloading of std::pow)
+
+Changes in Version 2.0
+- added truly exogenous variables to the estimation function
+- verbosity option now available for all functions
+- user par settings are not affected by BGVAR any more
+
+Changes in Version 2.0
+- First CRAN release version.

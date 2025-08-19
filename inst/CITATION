@@ -1,0 +1,41 @@
+if(!exists("meta") || is.null(meta)) {meta <- packageDescription("BGVAR")}
+year <- sub("-.*", "", meta$Date)
+version <- meta$Version
+
+bibentry(bibtype = "Article",
+  title        = "{BGVAR}: {B}ayesian Global Vector Autoregressions with Shrinkage Priors in {R}",
+  author       = c(person(given = "Maximilian",
+                          family = "Boeck",
+                          email = "maximilian.boeck@unibocconi.it"),
+                   person(given = "Martin",
+                          family = "Feldkircher",
+                          email = "martin.feldkircher@da-vienna.ac.at"),
+                   person(given = "Florian",
+                          family = "Huber",
+                          email = "florian.huber@sbg.ac.at")),
+  journal      = "Journal of Statistical Software",
+  year         = "2022",
+  volume       = "104",
+  number       = "9",
+  pages        = "1--28",
+  doi          = "10.18637/jss.v104.i09",
+  header       = "To cite BGVAR in publications use:"
+)
+
+bibentry(bibtype = "Manual",
+  header = "To cite the current version of BGVAR package please use:",
+  entry = "manual",
+  title = "{BGVAR}: {B}ayesian Global Vector Autoregressions",
+  author = c(
+    person(given = "Maximilian", family = "Boeck", email = "maximilian.boeck@unibocconi.it"),
+    person(given = "Martin", family = "Feldkircher", email = "martin.feldkircher@da-vienna.ac.at"),
+    person(given = "Florian", family = "Huber", email = "florian.huber@sbg.ac.at")),
+  year = year,
+  note = paste0("{R} package version ", version),
+  url = "https://CRAN.R-project.org/package=BGVAR",
+  textVersion = paste0("Maximilian Boeck, Martin Feldkircher and Florian Huber (2020) BGVAR: Bayesian Global Vector Autoregressions.",
+    "R package version ", version,
+    ", URL https://CRAN.R-project.org/package=BGVAR.")
+)
+
+citFooter("BibTeX entries can be obtained by", sQuote('toBibtex(citation("BGVAR"))'))

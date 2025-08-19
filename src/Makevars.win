@@ -1,0 +1,6 @@
+PKG_CPPFLAGS = -I../inst/include/ -DARMA_NO_DEBUG
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
+PKG_CXXFLAGS += -DRCPP_PARALLEL_USE_TBB=1
+PKG_LIBS = $(SHLIB_OPENMP_CFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS)
+PKG_LIBS += $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" \
+              -e "RcppParallel::RcppParallelLibs()")
