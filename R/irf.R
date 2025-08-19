@@ -1,5 +1,5 @@
 #' @export
-"irf" <- function(x, n.ahead=24, shockinfo=NULL, quantiles=NULL, expert=NULL, verbose=TRUE){
+"irf" <- function(x, n.ahead=24, shockinfo=NULL, quantiles=NULL, expert=NULL, verbose=TRUE, calc_median = TRUE){
   UseMethod("irf", x)
 }
 
@@ -93,7 +93,7 @@
 #' @importFrom stochvol sv_normal sv_beta sv_gamma
 #' @importFrom RcppParallel RcppParallelLibs setThreadOptions defaultNumThreads
 #' @importFrom filematrix fm.create fm.open closeAndDeleteFiles
-irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,verbose=TRUE){
+irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,verbose=TRUE,calc_median=TRUE){
   start.irf <- Sys.time()
   # get identification
   ident <- attr(shockinfo, "ident")
@@ -636,6 +636,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
     }
   }
   if(verbose) cat("\nQuantiles calculated")
+  if (calc_median) {
   # calculate objects needed for HD and struc shock functions later---------------------------------------------
   # median quantitities
   A       <- apply(A_large,c(1,2),median)
@@ -653,6 +654,9 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
     }
   }
   struc.obj <- list(A=A,Fmat=Fmat,Ginv=Ginv,Smat=Smat,Rmed=Rmed)
+  } else {
+    struc.obj <- NULL
+  }
   model.obj <- list(xglobal=xglobal,lags=lags)
   #--------------------------------- prepare output----------------------------------------------------------------------#
   out <- structure(list("posterior"   = imp_posterior,
