@@ -1475,11 +1475,11 @@
   })
   
   for(irep in 1:thindraws) {
-    S_large[,,irep] <- loop_results[[irep]]$S_iter
-    Ginv_large[,,irep] <- loop_results[[irep]]$Ginv_iter  
-    A_large[,,irep] <- loop_results[[irep]]$A_iter
-    F_large[,,,irep] <- loop_results[[irep]]$F_iter
-    if(eigen) F.eigen[irep] <- loop_results[[irep]]$F_eigen_iter
+    S_large[,,irep] <- results[[irep]]$S_iter
+    Ginv_large[,,irep] <- results[[irep]]$Ginv_iter  
+    A_large[,,irep] <- results[[irep]]$A_iter
+    F_large[,,,irep] <- results[[irep]]$F_iter
+    if(eigen) F.eigen[irep] <- results[[irep]]$F_eigen_iter
   }
   
   # kick out in-stable draws
