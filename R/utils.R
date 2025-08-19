@@ -1285,7 +1285,7 @@
 #' @importFrom stats median
 #' @importFrom utils memory.limit
 #' @noRd
-.gvar.stacking.wrapper<-function(xglobal,plag,globalpost,draws,thin,trend,eigen,trim,verbose,threads){
+.gvar.stacking.wrapper<-function(xglobal,plag,globalpost,draws,thin,trend,eigen,trim,verbose,applyfun=NULL,cores=NULL){
   results <- tryCatch(
     {
       bigT      <- nrow(xglobal)
@@ -1297,18 +1297,28 @@
       
       ## call Rcpp
       # Rcpp::sourceCpp("./src/gvar_stacking.cpp")
-      out <- gvar_stacking(xglobal    = xglobal,
-                           plag       = as.integer(plag), 
-                           globalpost = globalpost, 
-                           draws      = as.integer(draws),
-                           thin       = as.integer(thin), 
-                           trend      = trend, 
-                           eigen      = TRUE, 
-                           verbose    = verbose,
-                           threads    = threads)
+      # out <- gvar_stacking(xglobal    = xglobal,
+      #                      plag       = as.integer(plag), 
+      #                      globalpost = globalpost, 
+      #                      draws      = as.integer(draws),
+      #                      thin       = as.integer(thin), 
+      #                      trend      = trend, 
+      #                      eigen      = TRUE, 
+      #                      verbose    = verbose,
+      #                      threads    = threads)
+      out <- .gvar.stacking(xglobal    = xglobal,
+                            plag       = as.integer(plag),
+                            globalpost = globalpost,
+                            draws      = as.integer(draws),
+                            thin       = as.integer(thin),
+                            trend      = trend,
+                            eigen      = TRUE,
+                            verbose    = verbose,
+                            cores      = cores,
+                            applyfun   = applyfun)
       A_large    <- out$A_large
       for(pp in 1:plag){
-        F_large[,,pp,] <- out$F_large[,((bigK*(pp-1))+1):(bigK*pp),,drop=FALSE]
+        F_large[,,pp,] <- out$F_large[,((bigK*(pp-1))+1):(bigK*pp),pp,,drop=FALSE]
       }
       S_large    <- out$S_large
       Ginv_large <- out$Ginv_large
@@ -1369,7 +1379,7 @@
 #' @importFrom stats median
 #' @importFrom utils txtProgressBar setTxtProgressBar
 #' @noRd
-.gvar.stacking<-function(xglobal,plag,globalpost,draws,thin,trend,eigen=FALSE,trim=NULL,verbose=TRUE){
+.gvar.stacking<-function(xglobal,plag,globalpost,draws,thin,trend,eigen=FALSE,trim=NULL,verbose=TRUE,applyfun=NULL,cores=NULL){
   # initialize objects here
   bigT <- nrow(xglobal) 
   bigK <- ncol(xglobal)
@@ -1385,8 +1395,23 @@
   F_large     <- array(NA_real_, dim=c(bigK,bigK,plag,thindraws))
   dimnames(S_large)[[1]]<-dimnames(S_large)[[2]]<-dimnames(Ginv_large)[[1]]<-dimnames(Ginv_large)[[2]]<-dimnames(A_large)[[1]]<-colnames(xglobal)
   
-  pb <- txtProgressBar(min = 0, max = thindraws, style = 3)
-  for (irep in 1:thindraws){
+  
+  if(is.null(applyfun)) {
+    applyfun <- if(is.null(cores)) {
+      lapply
+    } else {
+      if(.Platform$OS.type == "windows") {
+        cl_cores <- parallel::makeCluster(cores)
+        on.exit(parallel::stopCluster(cl_cores))
+        function(X, FUN, ...) parallel::parLapply(cl = cl_cores, X, FUN, ...)
+      } else {
+        function(X, FUN, ...) mcprogress::pmclapply(X, FUN, ..., mc.cores =
+                                                      cores)
+      }
+    }
+  }
+  # pb <- txtProgressBar(min = 0, max = thindraws, style = 3)
+  results <- applyfun(1:thindraws, function(irep) {
     a0     <- NULL
     a1     <- NULL
     G      <- NULL
@@ -1418,8 +1443,10 @@
     ALPHA <- NULL
     for (kk in 1:plag){
       assign(paste("F",kk,sep=""),G.inv%*%get(paste("H",kk,sep="")))
-      F_large[,,kk,irep] <- get(paste("F",kk,sep=""))
-      ALPHA <- cbind(ALPHA,F_large[,,kk,irep])
+      F_kk <- get(paste("F",kk,sep=""))
+      if(kk == 1) F_large_iter <- array(NA_real_, dim=c(bigK,bigK,plag))
+      F_large_iter[,,kk] <- F_kk
+      ALPHA <- cbind(ALPHA, F_kk)
     }
     
     ALPHA <- cbind(ALPHA,b0,b1)
@@ -1437,7 +1464,22 @@
     #   X_large         <- X_large[(plag+1):nrow(X_large),]
     #   globalLik[irep] <- .globalLik(Y=Y_large,X=X_large,Sig=G.inv%*%S_large[irep,,]%*%t(G.inv),ALPHA=ALPHA,bigT=bigT-plag)
     # }
-    if(verbose) setTxtProgressBar(pb, irep)
+    # if(verbose) setTxtProgressBar(pb, irep)
+    list(
+      S_iter = as.matrix(bdiag(S_post)),
+      Ginv_iter = G.inv,
+      A_iter = ALPHA,
+      F_iter = F_large_iter,
+      F_eigen_iter = if(eigen) max(abs(Re(aux$values))) else NA
+    )
+  })
+  
+  for(irep in 1:thindraws) {
+    S_large[,,irep] <- loop_results[[irep]]$S_iter
+    Ginv_large[,,irep] <- loop_results[[irep]]$Ginv_iter  
+    A_large[,,irep] <- loop_results[[irep]]$A_iter
+    F_large[,,,irep] <- loop_results[[irep]]$F_iter
+    if(eigen) F.eigen[irep] <- loop_results[[irep]]$F_eigen_iter
   }
   
   # kick out in-stable draws
@@ -1459,7 +1501,7 @@
     trim.info <- paste("Trimming leads to ",length(idx) ," (",trim.info,"%) stable draws out of ",thindraws," total draws.",sep="")
   }
   
-  results<-list(S_large=S_large,F_large=F_large,Ginv_large=Ginv_large,A_large=A_large,F.eigen=F.eigen,trim.info=trim.info)
+  results<-list(S_large=S_large,F_large=F_large,Ginv_large=Ginv_large,A_large=A_large,F_eigen=F.eigen,trim.info=trim.info)
   return(results)
 }
 
