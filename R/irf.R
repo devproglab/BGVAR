@@ -448,12 +448,20 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   # IRF_store     <- array(NA_real_, dim=c(bigK,bigK,n.ahead+1,thindraws), dimnames=list(colnames(xglobal),paste0("shock_",colnames(xglobal)),seq(0,n.ahead),NULL))
   imp_posterior <- array(NA_real_, dim=c(bigK,n.ahead+1,shock.nr,Q))
   dimnames(imp_posterior) <- list(colnames(xglobal),seq(0,n.ahead),shocknames,paste0("Q",quantiles*100))
-  irf_bigmat <- big.matrix(nrow=bigK*bigK*(n.ahead+1), ncol=thindraws, 
-                           type="double", backingfile="IRF_data.bin",
-                           descriptorfile="IRF_data.desc")
-  rot_bigmat <- big.matrix(nrow=bigK*bigK, ncol=thindraws, 
-                           type="double", backingfile="ROT_data.bin",
-                           descriptorfile="ROT_data.desc")
+  # irf_bigmat <- big.matrix(nrow=bigK*bigK*(n.ahead+1), ncol=thindraws, 
+  #                          type="double", backingfile="IRF_data.bin",
+  #                          descriptorfile="IRF_data.desc")
+  # rot_bigmat <- big.matrix(nrow=bigK*bigK, ncol=thindraws, 
+  #                          type="double", backingfile="ROT_data.bin",
+  #                          descriptorfile="ROT_data.desc")
+  irf_bigmat <- fm.create(
+    filenamebase = "IRF_data",
+    nrow = bigK*bigK*(n.ahead+1),
+    ncol = thindraws)
+  rot_bigmat <- fm.create(
+    filenamebase = "ROT_data",
+    nrow = bigK*bigK,
+    ncol = thindraws)
   #------------------------------ start computing irfs  ---------------------------------------------------#
   start.comp <- Sys.time()
   if(verbose) cat(paste("Start impulse response analysis on ", cores, " core",ifelse(cores>1,"s",""), " (",thindraws," stable draws in total).",sep=""),"\n")
@@ -505,7 +513,8 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
     # imp.obj <- compute_irf(A_large[,,irep], S_large[,,irep], Ginv_large[,,irep], 
     #                        type, n.ahead+1, irep-1, shocklist, irf_bigmat@address, rot_bigmat@address, save_rot)
     applyfun(1:thindraws,function(irep){
-      mat <- bigmemory::attach.big.matrix('IRF_data.desc')
+      # mat <- bigmemory::attach.big.matrix('IRF_data.desc')
+      mat <- filematrix::fm.open('IRF_data')
       imp.obj <- compute_irf(A_large[,,irep], S_large[,,irep], Ginv_large[,,irep],
                              type, n.ahead+1, irep-1, shocklist, save_rot)
       mat[,irep] <- as.vector(imp.obj$irf_result)
@@ -660,9 +669,11 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   diff.irf <- difftime(end.irf,start.irf,units="mins")
   mins.irf <- round(diff.irf,0); secs.irf <- round((diff.irf-floor(diff.irf))*60,0)
   gc()
-  rm(irf_bigmat, rot_bigmat)
-  file.remove(c('IRF_data.bin', 'IRF_data.desc', 'ROT_data.bin', 'ROT_data.desc'))
-  gc()
+  # rm(irf_bigmat, rot_bigmat)
+  # file.remove(c('IRF_data.bin', 'IRF_data.desc', 'ROT_data.bin', 'ROT_data.desc'))
+  # gc()
+  closeAndDeleteFiles(irf_bigmat)
+  closeAndDeleteFiles(rot_bigmat)
   if(verbose) cat(paste("\nNeeded time for impulse response analysis: ",mins.irf," ",ifelse(mins.irf==1,"min","mins")," ",secs.irf, " ",ifelse(secs.irf==1,"second.","seconds.\n"),sep=""))
   return(out)
 }

@@ -115,3 +115,48 @@
 #   x[,irep] <- seq(1,1000)
 # })
 # o <- irf_bigmat[]
+# 
+# 
+# library(filematrix)
+# fm = fm.create(
+#   filenamebase = "big_fm",
+#   nrow = 1e5,
+#   ncol = 1e5)
+# cores <- 10
+# applyfun <- NULL
+# if(is.null(applyfun)) {
+#   applyfun <- if(is.null(cores)) {
+#     lapply
+#   } else {
+#     if(.Platform$OS.type == "windows") {
+#       cl_cores <- parallel::makeCluster(cores)
+#       on.exit(parallel::stopCluster(cl_cores))
+#       function(X, FUN, ...) parallel::parLapply(cl = cl_cores, X, FUN, ...)
+#     } else {
+#       function(X, FUN, ...) mcprogress::pmclapply(X, FUN, ..., mc.cores =
+#                                                     cores)
+#     }
+#   }
+# }
+# tic = proc.time()
+# imp.obj <- applyfun(1:1000,function(irep){
+#   fm = filematrix::fm.open(filenamebase = "big_fm", readonly = FALSE)
+#   fm[,irep] = irep + 1:nrow(fm)
+# })
+# toc = proc.time()
+# show(toc-tic)
+# 
+# fm[,4]
+# 
+# # tic = proc.time()
+# # for( i in seq_len(ncol(fm)) ) {
+# #   message(i, " of ", ncol(fm))
+# #   fm[,i] = i + 1:nrow(fm)
+# # }
+# # toc = proc.time()
+# # show(toc-tic)
+# 
+# # Cleanup
+# 
+# closeAndDeleteFiles(fm)
+# 
