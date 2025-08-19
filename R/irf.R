@@ -449,10 +449,10 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   imp_posterior <- array(NA_real_, dim=c(bigK,n.ahead+1,shock.nr,Q))
   dimnames(imp_posterior) <- list(colnames(xglobal),seq(0,n.ahead),shocknames,paste0("Q",quantiles*100))
   irf_bigmat <- big.matrix(nrow=bigK*bigK*(n.ahead+1), ncol=thindraws, 
-                           type="double", init = 0.0, backingfile="IRF_data.bin",
+                           type="double", backingfile="IRF_data.bin",
                            descriptorfile="IRF_data.desc")
   rot_bigmat <- big.matrix(nrow=bigK*bigK, ncol=thindraws, 
-                           type="double", init = 0.0, backingfile="ROT_data.bin",
+                           type="double", backingfile="ROT_data.bin",
                            descriptorfile="ROT_data.desc")
   #------------------------------ start computing irfs  ---------------------------------------------------#
   start.comp <- Sys.time()
