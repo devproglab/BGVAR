@@ -1373,11 +1373,118 @@
   return(results)
 }
 
+# .gvar.stacking<-function(xglobal,plag,globalpost,draws,thin,trend,eigen=FALSE,trim=NULL,verbose=TRUE,applyfun=NULL,cores=NULL){
+#   # initialize objects here
+#   bigT <- nrow(xglobal) 
+#   bigK <- ncol(xglobal)
+#   cN   <- names(globalpost)
+#   
+#   thindraws <- draws/thin
+#   F.eigen   <- numeric(thindraws)
+#   trim.info <- "No trimming"
+#   
+#   A_large     <- array(NA_real_, dim=c(bigK,bigK*plag+1+ifelse(trend,1,0),thindraws))
+#   S_large     <- array(NA_real_, dim=c(bigK,bigK,thindraws))
+#   Ginv_large  <- array(NA_real_, dim=c(bigK,bigK,thindraws))
+#   F_large     <- array(NA_real_, dim=c(bigK,bigK,plag,thindraws))
+#   dimnames(S_large)[[1]]<-dimnames(S_large)[[2]]<-dimnames(Ginv_large)[[1]]<-dimnames(Ginv_large)[[2]]<-dimnames(A_large)[[1]]<-colnames(xglobal)
+#   
+#   if(is.null(applyfun)) {
+#     applyfun <- if(is.null(cores)) {
+#       lapply
+#     } else {
+#       if(.Platform$OS.type == "windows") {
+#         cl_cores <- parallel::makeCluster(cores)
+#         on.exit(parallel::stopCluster(cl_cores))
+#         function(X, FUN, ...) parallel::parLapply(cl = cl_cores, X, FUN, ...)
+#       } else {
+#         function(X, FUN, ...) mcprogress::pmclapply(X, FUN, ..., mc.cores =
+#                                                       cores)
+#       }
+#     }
+#   }
+#   # pb <- txtProgressBar(min = 0, max = thindraws, style = 3)
+#   results <- applyfun(1:thindraws, function(irep) {
+#     a0     <- NULL
+#     a1     <- NULL
+#     G      <- NULL
+#     x      <- NULL
+#     S_post <- list()
+#     
+#     for (cc in 1:length(cN)){
+#       VAR <- globalpost[[cc]]
+#       W   <- VAR$W
+#       A   <- cbind(diag(ncol(VAR$Y)),-t(adrop(VAR$store$Lambda0store[,,irep,drop=FALSE],drop=3)))
+#       
+#       for(pp in 1:plag){
+#         assign(paste("B",pp,sep=""),cbind(t(adrop(VAR$store$Phistore[[pp]][,,irep,drop=FALSE],drop=3)),
+#                                     t(adrop(VAR$store$Lambdastore[[pp]][,,irep,drop=FALSE],drop=3))))
+#         if(cc==1) assign(paste("H",pp,sep=""), get(paste("B",pp,sep=""))%*%W)
+#         if(cc>1)  assign(paste("H",pp,sep=""), rbind(get(paste("H",pp,sep="")),get(paste("B",pp,sep=""))%*%W))
+#       }
+#       G            <- rbind(G,A%*%W)
+#       a0           <- rbind(a0,VAR$store$a0store[,irep,drop=FALSE])
+#       if(trend) a1 <- rbind(a1,VAR$store$a1store[,irep,drop=FALSE])
+#       S_post[[cc]] <- adrop(VAR$store$SIGMAmed_store[,,irep,drop=FALSE],drop=3)
+#     }
+#     G.inv  <- solve(G)
+#     S_large[,,irep] <- as.matrix(bdiag(S_post))
+#     b0     <- G.inv%*%a0
+#     if(trend) b1 <- G.inv%*%a1 else b1 <- NULL
+#     Ginv_large[,,irep] <- G.inv
+#     
+#     ALPHA <- NULL
+#     for (kk in 1:plag){
+#       assign(paste("F",kk,sep=""),G.inv%*%get(paste("H",kk,sep="")))
+#       F_kk <- get(paste("F",kk,sep=""))
+#       if(kk == 1) F_large_iter <- array(NA_real_, dim=c(bigK,bigK,plag))
+#       F_large_iter[,,kk] <- F_kk
+#       ALPHA <- cbind(ALPHA, F_kk)
+#     }
+#     
+#     ALPHA <- cbind(ALPHA,b0,b1)
+#     A_large[,,irep]<-ALPHA
+#     
+#     if(eigen){
+#       MM  <- .get_companion(ALPHA,c(ncol(xglobal),ifelse(trend,2,1),plag))$MM
+#       aux <- suppressWarnings(eigen(MM[1:(bigK*plag),1:(bigK*plag)]))
+#       F.eigen[irep] <- max(abs(Re(aux$values)))
+#     }
+#     # if(stats){
+#     #   X_large         <- cbind(.mlag(xglobal,plag),1)
+#     #   if(trend) X_large <- cbind(X_large,seq(1:nrow(X_large)))
+#     #   Y_large         <- xglobal[(plag+1):nrow(xglobal),]
+#     #   X_large         <- X_large[(plag+1):nrow(X_large),]
+#     #   globalLik[irep] <- .globalLik(Y=Y_large,X=X_large,Sig=G.inv%*%S_large[irep,,]%*%t(G.inv),ALPHA=ALPHA,bigT=bigT-plag)
+#     # }
+#     # if(verbose) setTxtProgressBar(pb, irep)
+#     list(
+#       S_iter = as.matrix(bdiag(S_post)),
+#       Ginv_iter = G.inv,
+#       A_iter = ALPHA,
+#       F_iter = F_large_iter,
+#       F_eigen_iter = if(eigen) max(abs(Re(aux$values))) else NA
+#     )
+#   })
+#   
+#   for(irep in 1:thindraws) {
+#     S_large[,,irep] <- results[[irep]]$S_iter
+#     Ginv_large[,,irep] <- results[[irep]]$Ginv_iter  
+#     A_large[,,irep] <- results[[irep]]$A_iter
+#     F_large[,,,irep] <- results[[irep]]$F_iter
+#     if(eigen) F.eigen[irep] <- results[[irep]]$F_eigen_iter
+#   }
+#   
+#   results<-list(S_large=S_large,F_large=F_large,Ginv_large=Ginv_large,A_large=A_large,F_eigen=F.eigen,trim.info=trim.info)
+#   return(results)
+# }
+
 #' @name .gvar.stacking
 #' @importFrom abind adrop
 #' @importFrom Matrix bdiag
 #' @importFrom stats median
 #' @importFrom utils txtProgressBar setTxtProgressBar
+#' @importFrom filematrix fm.create closeAndDeleteFiles 
 #' @noRd
 .gvar.stacking<-function(xglobal,plag,globalpost,draws,thin,trend,eigen=FALSE,trim=NULL,verbose=TRUE,applyfun=NULL,cores=NULL){
   # initialize objects here
@@ -1389,12 +1496,11 @@
   F.eigen   <- numeric(thindraws)
   trim.info <- "No trimming"
   
-  A_large     <- array(NA_real_, dim=c(bigK,bigK*plag+1+ifelse(trend,1,0),thindraws))
-  S_large     <- array(NA_real_, dim=c(bigK,bigK,thindraws))
-  Ginv_large  <- array(NA_real_, dim=c(bigK,bigK,thindraws))
-  F_large     <- array(NA_real_, dim=c(bigK,bigK,plag,thindraws))
-  dimnames(S_large)[[1]]<-dimnames(S_large)[[2]]<-dimnames(Ginv_large)[[1]]<-dimnames(Ginv_large)[[2]]<-dimnames(A_large)[[1]]<-colnames(xglobal)
-  
+  # Create filematrix objects instead of arrays
+  A_large_fm     <- fm.create('A_large', nrow=bigK, ncol=(bigK*plag+1+ifelse(trend,1,0))*thindraws)
+  S_large_fm     <- fm.create('S_large', nrow=bigK, ncol=bigK*thindraws)
+  Ginv_large_fm  <- fm.create('Ginv_large', nrow=bigK, ncol=bigK*thindraws)
+  F_large_fm     <- fm.create('F_large', nrow=bigK*bigK*plag, ncol=thindraws)
   
   if(is.null(applyfun)) {
     applyfun <- if(is.null(cores)) {
@@ -1410,8 +1516,10 @@
       }
     }
   }
+  
   # pb <- txtProgressBar(min = 0, max = thindraws, style = 3)
-  results <- applyfun(1:thindraws, function(irep) {
+  # results <- applyfun(1:thindraws, function(irep) {
+  for (irep in 1:thindraws) {
     a0     <- NULL
     a1     <- NULL
     G      <- NULL
@@ -1425,7 +1533,7 @@
       
       for(pp in 1:plag){
         assign(paste("B",pp,sep=""),cbind(t(adrop(VAR$store$Phistore[[pp]][,,irep,drop=FALSE],drop=3)),
-                                    t(adrop(VAR$store$Lambdastore[[pp]][,,irep,drop=FALSE],drop=3))))
+                                          t(adrop(VAR$store$Lambdastore[[pp]][,,irep,drop=FALSE],drop=3))))
         if(cc==1) assign(paste("H",pp,sep=""), get(paste("B",pp,sep=""))%*%W)
         if(cc>1)  assign(paste("H",pp,sep=""), rbind(get(paste("H",pp,sep="")),get(paste("B",pp,sep=""))%*%W))
       }
@@ -1435,71 +1543,68 @@
       S_post[[cc]] <- adrop(VAR$store$SIGMAmed_store[,,irep,drop=FALSE],drop=3)
     }
     G.inv  <- solve(G)
-    S_large[,,irep] <- as.matrix(bdiag(S_post))
+    S_iter <- as.matrix(bdiag(S_post))
     b0     <- G.inv%*%a0
     if(trend) b1 <- G.inv%*%a1 else b1 <- NULL
-    Ginv_large[,,irep] <- G.inv
     
     ALPHA <- NULL
+    F_large_iter <- array(NA_real_, dim=c(bigK,bigK,plag))
     for (kk in 1:plag){
       assign(paste("F",kk,sep=""),G.inv%*%get(paste("H",kk,sep="")))
       F_kk <- get(paste("F",kk,sep=""))
-      if(kk == 1) F_large_iter <- array(NA_real_, dim=c(bigK,bigK,plag))
       F_large_iter[,,kk] <- F_kk
       ALPHA <- cbind(ALPHA, F_kk)
     }
     
     ALPHA <- cbind(ALPHA,b0,b1)
-    A_large[,,irep]<-ALPHA
+    
+    # Store results directly in filematrix objects
+    A_cols <- ((irep-1)*(bigK*plag+1+ifelse(trend,1,0))+1):(irep*(bigK*plag+1+ifelse(trend,1,0)))
+    S_cols <- ((irep-1)*bigK+1):(irep*bigK)
+    Ginv_cols <- ((irep-1)*bigK+1):(irep*bigK)
+    
+    A_large_fm[,A_cols] <- ALPHA
+    S_large_fm[,S_cols] <- S_iter
+    Ginv_large_fm[,Ginv_cols] <- G.inv
+    F_large_fm[,irep] <- as.vector(F_large_iter)
     
     if(eigen){
       MM  <- .get_companion(ALPHA,c(ncol(xglobal),ifelse(trend,2,1),plag))$MM
       aux <- suppressWarnings(eigen(MM[1:(bigK*plag),1:(bigK*plag)]))
       F.eigen[irep] <- max(abs(Re(aux$values)))
     }
-    # if(stats){
-    #   X_large         <- cbind(.mlag(xglobal,plag),1)
-    #   if(trend) X_large <- cbind(X_large,seq(1:nrow(X_large)))
-    #   Y_large         <- xglobal[(plag+1):nrow(xglobal),]
-    #   X_large         <- X_large[(plag+1):nrow(X_large),]
-    #   globalLik[irep] <- .globalLik(Y=Y_large,X=X_large,Sig=G.inv%*%S_large[irep,,]%*%t(G.inv),ALPHA=ALPHA,bigT=bigT-plag)
-    # }
+    
     # if(verbose) setTxtProgressBar(pb, irep)
-    list(
-      S_iter = as.matrix(bdiag(S_post)),
-      Ginv_iter = G.inv,
-      A_iter = ALPHA,
-      F_iter = F_large_iter,
-      F_eigen_iter = if(eigen) max(abs(Re(aux$values))) else NA
-    )
-  })
+    NULL  # Return NULL since we're writing directly to filematrix
+  # })
+  }
   
+  # Convert filematrix objects back to arrays for output compatibility
+  A_large <- array(NA_real_, dim=c(bigK,bigK*plag+1+ifelse(trend,1,0),thindraws))
+  S_large <- array(NA_real_, dim=c(bigK,bigK,thindraws))
+  Ginv_large <- array(NA_real_, dim=c(bigK,bigK,thindraws))
+  F_large <- array(NA_real_, dim=c(bigK,bigK,plag,thindraws))
+  
+  # Set dimnames as in original
+  dimnames(S_large)[[1]]<-dimnames(S_large)[[2]]<-dimnames(Ginv_large)[[1]]<-dimnames(Ginv_large)[[2]]<-dimnames(A_large)[[1]]<-colnames(xglobal)
+  
+  # Copy data from filematrix to arrays
   for(irep in 1:thindraws) {
-    S_large[,,irep] <- results[[irep]]$S_iter
-    Ginv_large[,,irep] <- results[[irep]]$Ginv_iter  
-    A_large[,,irep] <- results[[irep]]$A_iter
-    F_large[,,,irep] <- results[[irep]]$F_iter
-    if(eigen) F.eigen[irep] <- results[[irep]]$F_eigen_iter
+    A_cols <- ((irep-1)*(bigK*plag+1+ifelse(trend,1,0))+1):(irep*(bigK*plag+1+ifelse(trend,1,0)))
+    S_cols <- ((irep-1)*bigK+1):(irep*bigK)
+    Ginv_cols <- ((irep-1)*bigK+1):(irep*bigK)
+    
+    A_large[,,irep] <- A_large_fm[,A_cols]
+    S_large[,,irep] <- S_large_fm[,S_cols]
+    Ginv_large[,,irep] <- Ginv_large_fm[,Ginv_cols]
+    F_large[,,,irep] <- array(F_large_fm[,irep], dim=c(bigK,bigK,plag))
   }
   
-  # kick out in-stable draws
-  if(!is.null(trim)){
-    if(trim==TRUE) trim <- 1.05
-    idx<-which(F.eigen<trim)
-    
-    F_large     <- F_large[,,,idx,drop=FALSE]
-    S_large     <- S_large[,,idx,drop=FALSE]
-    Ginv_large  <- Ginv_large[,,idx,drop=FALSE]
-    A_large     <- A_large[,,idx,drop=FALSE]
-    F.eigen     <- F.eigen[idx]
-    
-    if(length(idx)<10){
-      stop("Less than 10 stable draws have been found. Please re-estimate the model.")
-    }
-    
-    trim.info <- round((length(idx)/thindraws)*100,2)
-    trim.info <- paste("Trimming leads to ",length(idx) ," (",trim.info,"%) stable draws out of ",thindraws," total draws.",sep="")
-  }
+  # Clean up filematrix objects
+  closeAndDeleteFiles(A_large_fm)
+  closeAndDeleteFiles(S_large_fm)
+  closeAndDeleteFiles(Ginv_large_fm)
+  closeAndDeleteFiles(F_large_fm)
   
   results<-list(S_large=S_large,F_large=F_large,Ginv_large=Ginv_large,A_large=A_large,F_eigen=F.eigen,trim.info=trim.info)
   return(results)
