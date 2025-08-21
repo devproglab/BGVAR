@@ -1518,8 +1518,8 @@
   }
   
   # pb <- txtProgressBar(min = 0, max = thindraws, style = 3)
-  # results <- applyfun(1:thindraws, function(irep) {
-  for (irep in 1:thindraws) {
+  results <- applyfun(1:thindraws, function(irep) {
+  # for (irep in 1:thindraws) {
     a0     <- NULL
     a1     <- NULL
     G      <- NULL
@@ -1576,8 +1576,8 @@
     
     # if(verbose) setTxtProgressBar(pb, irep)
     NULL  # Return NULL since we're writing directly to filematrix
-  # })
-  }
+  })
+  # }
   
   # Convert filematrix objects back to arrays for output compatibility
   A_large <- array(NA_real_, dim=c(bigK,bigK*plag+1+ifelse(trend,1,0),thindraws))
