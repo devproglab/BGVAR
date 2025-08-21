@@ -480,7 +480,7 @@ bgvar<-function(Data,W,plag=1,draws=5000,burnin=5000,prior="NG",SV=TRUE,hold.out
   # Rcpp::sourceCpp("./src/BVAR_linear.cpp")
   start.estim <- Sys.time()
   globalpost <- applyfun(1:N, function(cc){
-    if(verbose) cat("\f",printtext,"\nModel: ",cc,"/",N," done.")
+    # if(verbose) cat("\f",printtext,"\nModel: ",cc,"/",N," done.")
     .BVAR_linear_wrapper(cc=cc,cN=cN,xglobal=xglobal,gW=gW,prior=prior,lags=lags,draws=draws,burnin=burnin,trend=trend,SV=SV,thin=thin,default_hyperpara=default_hyperpara,Ex=Ex,use_R=use_R,setting_store=setting_store)
   })
   cat("\014")
