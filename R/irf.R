@@ -569,40 +569,32 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   # Subset to shocks under consideration
   IRF_store <- array(NA_real_, dim=c(bigK, shock.nr, n.ahead+1, thindraws))
   if(Global){
-    dimnames(IRF_store) <- list(
-      colnames(xglobal),
-      names(shock.global),
-      seq(0, n.ahead),
-      NULL
-    )
+    # Pre-compute all row indices for efficiency
+    get_row_index <- function(var, shock, time) {
+      (shock-1)*bigK*(n.ahead+1) + (var-1)*(n.ahead+1) + time
+    }
     # Process each global shock
     for(ss in 1:shock.nr){
-      # Extract relevant shocks from the file-based matrix
       shock_indices <- shock.global[[ss]]
-      for(t in 1:(n.ahead+1)){
-        for(i in 1:bigK){
-          # Calculate row indices in the file-based matrix
-          # The original storage pattern: [var, shock, time] linearized
-          row_indices <- sapply(shock_indices, function(j) {
-            (j-1)*bigK*(n.ahead+1) + (i-1)*(n.ahead+1) + t
-          })
-          # Sum across the selected shocks for each variable and time
+      # Create matrix of all row indices we need
+      for(i in 1:bigK){
+        for(t in 1:(n.ahead+1)){
+          row_indices <- sapply(shock_indices, function(j) get_row_index(i, j, t))
+          # Sum across shocks for all draws at once
           for(draw in 1:thindraws){
             IRF_store[i, ss, t, draw] <- sum(irf_bigmat[row_indices, draw])
           }
         }
       }
-      # Normalize by the first selected shock's initial response
+      # Get normalization factor (first shock's own response at t=0)
       first_shock_idx <- which(shock.global[[ss]])[1]
-      # Get normalization values (response of first shock variable at t=0)
-      Mean <- numeric(thindraws)
+      norm_row_idx <- get_row_index(first_shock_idx, first_shock_idx, 1)
+      Mean <- irf_bigmat[norm_row_idx, ]
+      # Apply normalization and scaling to all draws
       for(draw in 1:thindraws){
-        row_idx <- (first_shock_idx-1)*bigK*(n.ahead+1) + (first_shock_idx-1)*(n.ahead+1) + 1
-        Mean[draw] <- irf_bigmat[row_idx, draw]
-      }
-      # Apply normalization and scaling
-      for(draw in 1:thindraws){
-        IRF_store[, ss, , draw] <- (IRF_store[, ss, , draw] / Mean[draw]) * scale[ss]
+        if(Mean[draw] != 0) {
+          IRF_store[, ss, , draw] <- (IRF_store[, ss, , draw] / Mean[draw]) * scale[ss]
+        }
       }
     }
   }
