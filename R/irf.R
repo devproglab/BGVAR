@@ -322,7 +322,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
       for(ss in 1:length(shocks)){
         idx <- shockinfo$sign[grep(shocks[ss],shockinfo$shock)]%in%c("0","ratio.H","ratio.avg")
         if(!all(sapply(strsplit(shockinfo$restriction[grep(shocks[ss],shockinfo$shock)[idx]],".",fixed=TRUE),function(x)x[1])==shock.cN[ss])){
-          stop("Please provide zero and rationality conditions only in same country as the origin of the shock.")
+          # stop("Please provide zero and rationality conditions only in same country as the origin of the shock.")
         }
       }
     }
