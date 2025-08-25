@@ -569,28 +569,67 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   # Subset to shocks under consideration
   IRF_store <- array(NA_real_, dim=c(bigK, shock.nr, n.ahead+1, thindraws))
   if(Global){
-    # Extract and sum shocks for each global shock group
+    dimnames(IRF_store) <- list(
+      colnames(xglobal),
+      names(shock.global),
+      seq(0, n.ahead),
+      NULL
+    )
+    # Process each global shock
     for(ss in 1:shock.nr){
-      temp_sum <- array(0, dim=c(bigK, n.ahead+1, thindraws))
-      for(shock_idx in shock.global[[ss]]){
-        for(k in 0:n.ahead){
-          base_row_idx <- k * bigK * bigK + (shock_idx-1) * bigK
-          row_indices <- base_row_idx + (1:bigK)
-          temp_sum[, k+1, ] <- temp_sum[, k+1, ] + irf_bigmat[row_indices, 1:thindraws]
+      # Extract relevant shocks from the file-based matrix
+      shock_indices <- shock.global[[ss]]
+      for(t in 1:(n.ahead+1)){
+        for(i in 1:bigK){
+          # Calculate row indices in the file-based matrix
+          # The original storage pattern: [var, shock, time] linearized
+          row_indices <- sapply(shock_indices, function(j) {
+            (j-1)*bigK*(n.ahead+1) + (i-1)*(n.ahead+1) + t
+          })
+          # Sum across the selected shocks for each variable and time
+          for(draw in 1:thindraws){
+            IRF_store[i, ss, t, draw] <- sum(irf_bigmat[row_indices, draw])
+          }
         }
       }
-      # Store summed responses
-      IRF_store[, ss, , ] <- temp_sum
-    }
-    # Apply scaling
-    for(ss in 1:shock.nr){
-      Mean <- IRF_store[which(shock.global[[ss]])[1], ss, 1, ]
-      for(irep in 1:thindraws){
-        IRF_store[, ss, , irep] <- (IRF_store[, ss, , irep] / Mean[irep]) * scale[ss]
+      # Normalize by the first selected shock's initial response
+      first_shock_idx <- which(shock.global[[ss]])[1]
+      # Get normalization values (response of first shock variable at t=0)
+      Mean <- numeric(thindraws)
+      for(draw in 1:thindraws){
+        row_idx <- (first_shock_idx-1)*bigK*(n.ahead+1) + (first_shock_idx-1)*(n.ahead+1) + 1
+        Mean[draw] <- irf_bigmat[row_idx, draw]
+      }
+      # Apply normalization and scaling
+      for(draw in 1:thindraws){
+        IRF_store[, ss, , draw] <- (IRF_store[, ss, , draw] / Mean[draw]) * scale[ss]
       }
     }
-    dimnames(IRF_store)[[2]] <- names(shock.global)
-  } else{
+  }
+  # if(Global){
+  #   # Extract and sum shocks for each global shock group
+  #   for(ss in 1:shock.nr){
+  #     temp_sum <- array(0, dim=c(bigK, n.ahead+1, thindraws))
+  #     for(shock_idx in shock.global[[ss]]){
+  #       for(k in 0:n.ahead){
+  #         base_row_idx <- k * bigK * bigK + (shock_idx-1) * bigK
+  #         row_indices <- base_row_idx + (1:bigK)
+  #         temp_sum[, k+1, ] <- temp_sum[, k+1, ] + irf_bigmat[row_indices, 1:thindraws]
+  #       }
+  #     }
+  #     # Store summed responses
+  #     IRF_store[, ss, , ] <- temp_sum
+  #   }
+  #   # Apply scaling
+  #   for(ss in 1:shock.nr){
+  #     Mean <- IRF_store[which(shock.global[[ss]])[1], ss, 1, ]
+  #     for(irep in 1:thindraws){
+  #       IRF_store[, ss, , irep] <- (IRF_store[, ss, , irep] / Mean[irep]) * scale[ss]
+  #     }
+  #   }
+  #   dimnames(IRF_store)[[2]] <- names(shock.global)
+  # } 
+  else{
     # Extract selected shocks
     for(ss in 1:shock.nr){
       shock_idx <- select_shocks[ss]
