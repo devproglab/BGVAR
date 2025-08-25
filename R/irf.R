@@ -459,10 +459,10 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
     filenamebase = "IRF_data",
     nrow = bigK*bigK*(n.ahead+1),
     ncol = thindraws)
-  rot_bigmat <- fm.create(
-    filenamebase = "ROT_data",
-    nrow = bigK*bigK,
-    ncol = thindraws)
+  # rot_bigmat <- fm.create(
+  #   filenamebase = "ROT_data",
+  #   nrow = bigK*bigK,
+  #   ncol = thindraws)
   #------------------------------ start computing irfs  ---------------------------------------------------#
   start.comp <- Sys.time()
   if(verbose) cat(paste("Start impulse response analysis on ", cores, " core",ifelse(cores>1,"s",""), " (",thindraws," stable draws in total).",sep=""),"\n")
@@ -520,7 +520,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
       imp.obj <- compute_irf(A_large[,,irep], S_large[,,irep], Ginv_large[,,irep],
                              type, n.ahead+1, irep-1, shocklist, save_rot)
       mat[,irep] <- as.vector(imp.obj$irf_result)
-      mat2[,irep] <- as.vector(imp.obj$rot_result)
+      # mat2[,irep] <- as.vector(imp.obj$rot_result)
       counter[irep] <- imp.obj$counter
       imp.obj$irf_result <- NULL
       imp.obj$rot_result <- NULL
@@ -535,7 +535,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
       # irf_bigmat = deepcopy(irf_bigmat, cols = which(!counter==MaxTries))
       # rot_bigmat = deepcopy(rot_bigmat, cols = which(!counter==MaxTries))
       irf_bigmat <- irf_bigmat[,-which(!counter==MaxTries)]
-      rot_bigmat <- rot_bigmat[,-which(!counter==MaxTries)]
+      # rot_bigmat <- rot_bigmat[,-which(!counter==MaxTries)]
       if(verbose) cat("\nRows hitting MaxIter removed")
     }
     # rm(temp)
@@ -569,58 +569,26 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   # Subset to shocks under consideration
   IRF_store <- array(NA_real_, dim=c(bigK, shock.nr, n.ahead+1, thindraws))
   if(Global){
-    # Pre-compute all row indices for efficiency
-    get_row_index <- function(var, shock, time) {
-      (shock-1)*bigK*(n.ahead+1) + (var-1)*(n.ahead+1) + time
-    }
-    # Process each global shock
     for(ss in 1:shock.nr){
-      shock_indices <- shock.global[[ss]]
-      # Create matrix of all row indices we need
-      for(i in 1:bigK){
-        for(t in 1:(n.ahead+1)){
-          row_indices <- sapply(shock_indices, function(j) get_row_index(i, j, t))
-          # Sum across shocks for all draws at once
-          for(draw in 1:thindraws){
-            IRF_store[i, ss, t, draw] <- sum(irf_bigmat[row_indices, draw])
-          }
+      shock_logical <- shock.global[[ss]]
+      shock_indices <- which(shock_logical)
+      temp <- array(0, dim=c(bigK, n.ahead+1, thindraws))
+      # Sum across all shocks in the group
+      for(shock_idx in shock_indices){
+        for(k in 0:n.ahead){
+          base_row_idx <- k * bigK * bigK + (shock_idx-1) * bigK
+          row_indices <- base_row_idx + (1:bigK)
+          temp[, k+1, ] <- temp[, k+1, ] + irf_bigmat[row_indices, 1:thindraws]
         }
       }
-      # Get normalization factor (first shock's own response at t=0)
-      first_shock_idx <- which(shock.global[[ss]])[1]
-      norm_row_idx <- get_row_index(first_shock_idx, first_shock_idx, 1)
-      Mean <- irf_bigmat[norm_row_idx, ]
-      # Apply normalization and scaling to all draws
-      for(draw in 1:thindraws){
-        if(Mean[draw] != 0) {
-          IRF_store[, ss, , draw] <- (IRF_store[, ss, , draw] / Mean[draw]) * scale[ss]
-        }
+      # Normalize by first variable's impact response
+      Mean <- temp[shock_indices[1], 1, ]
+      for(irep in 1:thindraws){
+        temp[,,irep] <- (temp[,,irep]/Mean[irep]) * scale[ss]
       }
+      IRF_store[, ss, , ] <- temp
     }
   }
-  # if(Global){
-  #   # Extract and sum shocks for each global shock group
-  #   for(ss in 1:shock.nr){
-  #     temp_sum <- array(0, dim=c(bigK, n.ahead+1, thindraws))
-  #     for(shock_idx in shock.global[[ss]]){
-  #       for(k in 0:n.ahead){
-  #         base_row_idx <- k * bigK * bigK + (shock_idx-1) * bigK
-  #         row_indices <- base_row_idx + (1:bigK)
-  #         temp_sum[, k+1, ] <- temp_sum[, k+1, ] + irf_bigmat[row_indices, 1:thindraws]
-  #       }
-  #     }
-  #     # Store summed responses
-  #     IRF_store[, ss, , ] <- temp_sum
-  #   }
-  #   # Apply scaling
-  #   for(ss in 1:shock.nr){
-  #     Mean <- IRF_store[which(shock.global[[ss]])[1], ss, 1, ]
-  #     for(irep in 1:thindraws){
-  #       IRF_store[, ss, , irep] <- (IRF_store[, ss, , irep] / Mean[irep]) * scale[ss]
-  #     }
-  #   }
-  #   dimnames(IRF_store)[[2]] <- names(shock.global)
-  # } 
   else{
     # Extract selected shocks
     for(ss in 1:shock.nr){
@@ -713,7 +681,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   # file.remove(c('IRF_data.bin', 'IRF_data.desc', 'ROT_data.bin', 'ROT_data.desc'))
   # gc()
   closeAndDeleteFiles(irf_bigmat)
-  closeAndDeleteFiles(rot_bigmat)
+  # closeAndDeleteFiles(rot_bigmat)
   if(verbose) cat(paste("\nNeeded time for impulse response analysis: ",mins.irf," ",ifelse(mins.irf==1,"min","mins")," ",secs.irf, " ",ifelse(secs.irf==1,"second.","seconds.\n"),sep=""))
   return(out)
 }
