@@ -440,11 +440,11 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   if(is.null(cores)) cores <- 1
   #------------------------------ container -------------------------------------------------------#
   # initialize objects to save IRFs, HDs, etc.
-  if(ident=="sign"){
-    R_store       <- array(NA_real_, dim=c(bigK,bigK,thindraws), dimnames=list(colnames(xglobal),colnames(xglobal),NULL))
-  }else{
-    R_store <- NULL
-  }
+  # if(ident=="sign"){
+  #   R_store       <- array(NA_real_, dim=c(bigK,bigK,thindraws), dimnames=list(colnames(xglobal),colnames(xglobal),NULL))
+  # }else{
+  #   R_store <- NULL
+  # }
   save_rot <- ifelse(ident=="sign",TRUE,FALSE)
   # IRF_store     <- array(NA_real_, dim=c(bigK,bigK,n.ahead+1,thindraws), dimnames=list(colnames(xglobal),paste0("shock_",colnames(xglobal)),seq(0,n.ahead),NULL))
   imp_posterior <- array(NA_real_, dim=c(bigK,n.ahead+1,shock.nr,Q))
@@ -516,9 +516,11 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
     applyfun(1:thindraws,function(irep){
       # mat <- bigmemory::attach.big.matrix('IRF_data.desc')
       mat <- filematrix::fm.open('IRF_data')
+      mat2 <- filematrix::fm.open('ROT_data')
       imp.obj <- compute_irf(A_large[,,irep], S_large[,,irep], Ginv_large[,,irep],
                              type, n.ahead+1, irep-1, shocklist, save_rot)
       mat[,irep] <- as.vector(imp.obj$irf_result)
+      mat2[,irep] <- as.vector(imp.obj$rot_result)
       counter[irep] <- imp.obj$counter
       imp.obj$irf_result <- NULL
       imp.obj$rot_result <- NULL
@@ -669,7 +671,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
                    class="bgvar.irf")
   if(save.store){
     out$IRF_store = IRF_store
-    out$R_store = R_store
+    # out$R_store = R_store
   }
   if(verbose) cat(paste("\nSize of irf object: ", format(object.size(out),unit="MB")))
   end.irf <- Sys.time()
