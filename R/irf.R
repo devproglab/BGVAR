@@ -516,7 +516,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
     applyfun(1:thindraws,function(irep){
       # mat <- bigmemory::attach.big.matrix('IRF_data.desc')
       mat <- filematrix::fm.open('IRF_data')
-      mat2 <- filematrix::fm.open('ROT_data')
+      # mat2 <- filematrix::fm.open('ROT_data')
       imp.obj <- compute_irf(A_large[,,irep], S_large[,,irep], Ginv_large[,,irep],
                              type, n.ahead+1, irep-1, shocklist, save_rot)
       mat[,irep] <- as.vector(imp.obj$irf_result)
