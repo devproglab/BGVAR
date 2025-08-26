@@ -92,7 +92,7 @@
 #' @importFrom abind adrop abind
 #' @importFrom stochvol sv_normal sv_beta sv_gamma
 #' @importFrom RcppParallel RcppParallelLibs setThreadOptions defaultNumThreads
-#' @importFrom filematrix fm.create fm.open closeAndDeleteFiles
+#' @importFrom filematrix fm.create fm.open closeAndDeleteFiles close
 irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,verbose=TRUE){
   start.irf <- Sys.time()
   # get identification
@@ -680,7 +680,7 @@ irf.bgvar <- function(x,n.ahead=24,shockinfo=NULL,quantiles=NULL,expert=NULL,ver
   # rm(irf_bigmat, rot_bigmat)
   # file.remove(c('IRF_data.bin', 'IRF_data.desc', 'ROT_data.bin', 'ROT_data.desc'))
   # gc()
-  close(irf_bigmat)
+  filematrix::close(irf_bigmat)
   # closeAndDeleteFiles(irf_bigmat)
   # closeAndDeleteFiles(rot_bigmat)
   if(verbose) cat(paste("\nNeeded time for impulse response analysis: ",mins.irf," ",ifelse(mins.irf==1,"min","mins")," ",secs.irf, " ",ifelse(secs.irf==1,"second.","seconds.\n"),sep=""))
